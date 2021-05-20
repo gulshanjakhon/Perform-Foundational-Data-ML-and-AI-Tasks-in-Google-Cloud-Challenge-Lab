@@ -1,0 +1,132 @@
+NAME : Perform Foundational Data, ML, and AI Tasks in Google Cloud: Challenge Lab  💥💥
+
+===========================Pro tip : Replace your project id With [YOUR_PROJECT] whenever it show error : ================================
+for making easy : visit this file for all screenshot in this lab : https://drive.google.com/file/d/1YhqxtOfMGIwcMumLnhugj-wqeaOaakSH/view?usp=sharing
+
+------------------------
+Task 1:
+
+Create a bigquery dataset called lab
+Create a bucket called YOUR_PROJECT (your project)
+
+------------------------
+Task 2:
+
+Create a cluster with defaults
+Open cluster | vm instances | ssh to master, run the command
+Create a job
+
+In case if it takes time please try to delete the job and recreate
+
+-------------------------
+Task 3:
+
+In dataprep:
+Import gs://cloud-training/gsp323/runs.csv
+You may need to include the bucket path as the GCS prefix/path to locate the file in Dataprep
+Create a new flow and recipe with the following steps
+In recipe, select Filter exact
+Choose the following:
+
+Click Add
+Add another step and select Filter exact
+Choose the following:
+
+Click Add.
+Add another step and select Rename columns
+Rename the columns as such:
+col2:'runid'
+col3:'userid'
+col4:'labid'
+col5:'lab_title'
+col6:'start'
+col7:'end'
+col8:'time'
+col9:'score'
+col10:'state'
+
+Click the +add button within the manual rename step to add additional columns.
+
+Run the job, take the defaults
+
+
+-------------------------------
+Task 4:
+
+Part 1:
+
+Cloud Natural Language:
+
+In cloud shell Run : 
+
+gcloud iam service-accounts create my-natlang-sa \
+  --display-name "my natural language service account"
+
+gcloud iam service-accounts keys create ~/key.json \
+  --iam-account my-natlang-sa@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com
+
+export GOOGLE_APPLICATION_CREDENTIALS="/home/$USER/key.json"
+
+gcloud auth activate-service-account my-natlang-sa@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+
+gcloud ml language analyze-entities --content="Old Norse texts portray Odin as one-eyed and long-bearded, frequently wielding a spear named Gungnir and wearing a cloak and a broad hat." > result.json
+
+gcloud auth login
+
+#You will receive one link in the URL. Open it, select the account and copy the Token and paste it on cloud shell
+gsutil cp result.json gs://$GOOGLE_CLOUD_PROJECT-marking/task4-cnl.result
+
+
+Cloud Speech:
+
+Create an API key and set API_KEY var in cloud shell
+
+Create the file request.json with:
+{
+  "config": {
+      "encoding":"FLAC",
+      "languageCode": "en-US"
+  },
+  "audio": {
+      "uri":"gs://cloud-training/gsp323/task4.flac"
+  }
+}
+
+curl -s -X POST -H "Content-Type: application/json" --data-binary @request.json \
+"https://speech.googleapis.com/v1/speech:recognize?key=${API_KEY}" > result.json
+
+gsutil cp result.json gs://YOUR_PROJECT-marking/task4-gcs.result
+
+
+Video Intelligence:
+
+gcloud iam service-accounts create quickstart
+
+gcloud iam service-accounts keys create key.json --iam-account quickstart@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com
+
+gcloud auth activate-service-account --key-file key.json
+
+export ACCESS_TOKEN=$(gcloud auth print-access-token)
+
+Create a file called request.json with
+{
+  "inputUri":"gs://spls/gsp154/video/train.mp4",
+  "features": [
+      "TEXT_DETECTION"
+  ]
+}
+
+curl -s -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $ACCESS_TOKEN" \
+    'https://videointelligence.googleapis.com/v1/videos:annotate' \
+    -d @request.json
+
+Wait for the operation to complete, check with
+curl -s -H 'Content-Type: application/json' -H "Authorization: Bearer $ACCESS_TOKEN" 'https://videointelligence.googleapis.com/v1/projects/PROJECTS/locations/LOCATION/operations/OPERATION_FROM_PREVIOUS_REQUEST' > result1.json
+
+Either give quickstart SA the Storage Object Admin role or switch back to default QL SA
+
+gsutil cp result1.json gs://YOUR_PROJECT-marking/task4-gvi.result
+
+
+#HAPPY LEARNING
